@@ -67,7 +67,7 @@ export default async function Home({ searchParams }: SearchParamProps) {
           limit={6}
           page={page}
           totalPages={events?.totalPages} */}
-        />
+        {/* /> */}
       </section>
     </>
   );
