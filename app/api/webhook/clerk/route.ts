@@ -55,30 +55,66 @@ export async function POST(req: Request) {
   const { id } = evt.data;
   const eventType = evt.type;
  
-if(eventType === 'user.created'){
-    const{id , email_addresses, image_url, first_name, last_name, username} = evt.data;
+// if(eventType === 'user.created'){
+//     const{id , email_addresses, image_url, first_name, last_name, username} = evt.data;
 
-    const user = {
-        clerkId:id,
-        email: email_addresses[0].email_address,
-        username: username!,
-        firstName: first_name,
-        lastName: last_name,
-        photo:image_url,
-    }
+//     const user = {
+//         clerkId:id,
+//         email: email_addresses[0].email_address,
+//         username: username!,
+//         firstName: first_name,
+//         lastName: last_name,
+//         photo:image_url,
+//     }
 
-    const newUser = await createUser(user); // we have to create this createUser action first 
-                                           // in lib -> actions->user.actions.ts
-    if(newUser){
-        await clerkClient.users.updateUserMetadata(id, {
-            publicMetadata:{
-                userId: newUser._id
-            }
-        })
-    }
-    return NextResponse.json({message:'OK', user:newUser})
+//     const newUser = await createUser(user); // we have to create this createUser action first 
+//                                            // in lib -> actions->user.actions.ts
+//     if(newUser){
+//         await clerkClient.users.updateUserMetadata(id, {
+//             publicMetadata:{
+//                 userId: newUser._id
+//             }
+//         })
+//     }
+//     return NextResponse.json({message:'OK', user:newUser})
 
+// }
+
+if (eventType === 'user.created') {
+  const { id, email_addresses, image_url, first_name, last_name, username } = evt.data;
+
+  if (!id || !email_addresses || !image_url || !first_name || !last_name || !username) {
+    console.error('Incomplete user data received:', evt.data);
+    return new Response('Error occurred - incomplete user data', {
+      status: 400
+    });
+  }
+
+  const user = {
+    clerkId: id,
+    email: email_addresses[0].email_address,
+    username: username!,
+    firstName: first_name,
+    lastName: last_name,
+    photo: image_url,
+  }
+
+  try {
+    const newUser = await createUser(user);
+    await clerkClient.users.updateUserMetadata(id, {
+      publicMetadata: {
+        userId: newUser._id
+      }
+    });
+    return NextResponse.json({ message: 'OK', user: newUser });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    return new Response('Error occurred - user creation', {
+      status: 500
+    });
+  }
 }
+
 
     if (eventType === 'user.updated') {
     const {id, image_url, first_name, last_name, username } = evt.data
